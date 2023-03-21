@@ -7,7 +7,7 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: 'Iot Authentication',
   },
   routes: [
     {
@@ -25,11 +25,15 @@ export default defineConfig({
       component: './Access',
     },
     {
-        name: ' CRUD 示例',
-        path: '/table',
-        component: './Table',
+      name: ' CRUD 示例',
+      path: '/table',
+      component: './Table',
+    },
+    {
+      name: '账户管理',
+      path: '/User',
+      component: './User',
     },
   ],
   npmClient: 'pnpm',
 });
-
