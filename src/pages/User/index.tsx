@@ -3,15 +3,17 @@ import keyring from '@polkadot/ui-keyring';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { u8aToHex } from '@polkadot/util';
 import { useModel } from '@umijs/max';
-import { Button, Card, Col, Row, message } from 'antd';
+import { Button, Card, Col, Row, message, Divider } from 'antd';
 import Identicon from '@polkadot/react-identicon';
 import {
   EditOutlined,
   EllipsisOutlined,
-  SettingOutlined,
+  SettingOutlined, UserAddOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { KeyringAddress } from '@polkadot/ui-keyring/types';
+import { useState } from 'react';
+import CreateNewAccountModal from '@/pages/User/compoments/createNewAccountModal';
 
 const { Meta } = Card;
 
@@ -26,6 +28,8 @@ export default () => {
     useModel('@@initialState');
   const [messageApi, contextHolder] = message.useMessage();
 
+  const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] = useState(false);
+
   const acc = accounts.map((item) => {
     return (
       <Col span={12} key={item.address}>
@@ -33,7 +37,7 @@ export default () => {
         <Card
           actions={[
             <UserSwitchOutlined
-              key="switch"
+              key='switch'
               onClick={() => {
                 setInitialState({
                   ...initialState,
@@ -44,9 +48,9 @@ export default () => {
                 );
               }}
             />,
-            <SettingOutlined key="setting" />,
-            <EditOutlined key="edit" />,
-            <EllipsisOutlined key="ellipsis" />,
+            <SettingOutlined key='setting' />,
+            <EditOutlined key='edit' />,
+            <EllipsisOutlined key='ellipsis' />,
           ]}
         >
           <Meta
@@ -68,7 +72,16 @@ export default () => {
 
   return (
     <PageContainer>
-      <Button onClick={() => testClick('')}>Test Button</Button>
+      <CreateNewAccountModal modalVisible={isCreateAccountModalOpen} onCancel={
+        () => {
+          setIsCreateAccountModalOpen(false);
+        }
+      }></CreateNewAccountModal>
+      <Button type='primary' shape='circle' icon={<UserAddOutlined />} size='large' onClick={() => {
+        setIsCreateAccountModalOpen(true);
+      }
+      }></Button>
+      <Divider dashed>当前保存的用户</Divider>
       <Row gutter={16}>{acc}</Row>
     </PageContainer>
   );
