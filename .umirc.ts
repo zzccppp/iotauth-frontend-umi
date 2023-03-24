@@ -34,6 +34,11 @@ export default defineConfig({
       path: '/User',
       component: './User',
     },
+    {
+      name: 'Iot设备',
+      path: '/Devices',
+      component: './Devices',
+    },
   ],
   npmClient: 'pnpm',
 });
