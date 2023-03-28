@@ -13,6 +13,7 @@ import { randomAsNumber } from '@polkadot/util-crypto';
 import keyring from '@polkadot/ui-keyring';
 import PasswordInputModal from './PasswordInputModal';
 import { KeyringPair } from '@polkadot/keyring/types';
+import ConnectModal from './ConnectModal';
 
 interface DeviceCardProps {
   device: Device;
@@ -23,58 +24,48 @@ const DeviceCard: React.FC<PropsWithChildren<DeviceCardProps>> = (props) => {
   const { device, messageApi } = props;
   const { initialState, loading, error, refresh, setInitialState } =
     useModel('@@initialState');
-  const [showPIM, setShowPIM] = useState<boolean>(false);
+  const [showCM, setShowCM] = useState<boolean>(false);
 
   const api = initialState?.api;
   const account = initialState?.account;
 
-  async function doAuth(pair: KeyringPair) {
-    if (api) {
-	//   if (device.paraId == )
-      await api.tx.iotAuth
-        .requestLocalAuth(device.uniqueId, randomAsNumber())
-        .signAndSend(pair, { nonce: -1 });
-    }
-    pair.lock();
-  }
+  // async function doAuth(pair: KeyringPair) {
+  //   if (api) {
+  //     setShowCM(true);
+  //     await api.tx.iotAuth
+  //       .requestLocalAuth(device.uniqueId, randomAsNumber())
+  //       .signAndSend(pair, { nonce: -1 });
+  //   }
+  //   pair.lock();
+  // }
 
   return (
     <>
-      <PasswordInputModal
-        modalVisible={showPIM}
+      <ConnectModal
+        device={device}
+        modalVisible={showCM}
+        messageApi={messageApi}
         onCancel={() => {
-          setShowPIM(false);
+          setShowCM(false);
         }}
-        onSubmit={(pass: string) => {
-          if (api && account) {
-            const pair = keyring.getPair(account.address);
-            try {
-              pair.unlock(pass);
-            } catch (_) {
-              messageApi.error('密码错误');
-              return;
-            }
-            messageApi.success('解锁成功');
-            doAuth(pair);
-            // pair.lock();
-          }
-
-          setShowPIM(false);
+        onSave={function (): void {
+          throw new Error('Function not implemented.');
         }}
-      ></PasswordInputModal>
+      ></ConnectModal>
       <Card
         actions={[
           <ApiOutlined
             key="auth"
             onClick={async () => {
-              if (api && account) {
-                const pair = keyring.getPair(account.address);
-                if (pair.isLocked) {
-                  setShowPIM(true);
-                  return;
-                }
-                doAuth(pair);
-              }
+              // if (api && account) {
+              //   const pair = keyring.getPair(account.address);
+              //   if (pair.isLocked) {
+              //     setShowPIM(true);
+              //     return;
+              //   }
+              //   doAuth(pair);
+              // }
+              setShowCM(true);
             }}
           />,
           <DeleteOutlined
