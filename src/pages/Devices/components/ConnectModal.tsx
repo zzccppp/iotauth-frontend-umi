@@ -16,11 +16,13 @@ import {
   Descriptions,
   Input,
   Modal,
+  Result,
   Row,
   Space,
   Spin,
   StepProps,
   Steps,
+  Typography,
 } from 'antd';
 import React, { PropsWithChildren, useState } from 'react';
 import { Device } from './DeviceList';
@@ -38,6 +40,13 @@ interface ConnectModalProps {
   onSave: () => void;
 }
 
+interface Credential {
+  account: string;
+  issue_time: number;
+  random: string;
+  unique_id: string;
+}
+
 const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
   props,
 ) => {
@@ -52,6 +61,9 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
   const [stepsStatus, setStepsStatus] = useState<
     'wait' | 'process' | 'finish' | 'error'
   >('process');
+
+  const [credential, setCredential] = useState<string>('');
+  const [sign, setSign] = useState<string>('');
 
   const api = initialState?.api;
   const account = initialState?.account;
@@ -110,20 +122,18 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
             event.section == 'iotAuth' &&
             event.method == 'LocalAuthCredentialIssued'
           ) {
-            const credential = event.data['credential'];
+            const cred = event.data['credential'];
             const signature = event.data['signature'];
-            const cred_json = JSON.parse(credential.toHuman());
-            console.log(cred_json);
+            const cred_json: Credential = JSON.parse(cred.toHuman());
             if (
               Number.parseInt(cred_json.random) == randomNum &&
               cred_json.unique_id == device.uniqueId &&
               cred_json.account == account.address
             ) {
-              //   log.info(
-              //     `Received LocalAuthCredentialIssued for ${bob.address} random: ${randomNum}`,
-              //   );
-              //   log.info(`Credential: ${credential.toHuman()}`);
-
+              console.log(cred_json);
+              setCredential(cred.toHuman());
+              setSign(signature.toHex());
+              setCurrent(3);
               //   // 验证签名
               //   const verify_result = bob.verify(
               //     credential,
@@ -131,7 +141,6 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
               //     ca_pubkey,
               //   );
               //   log.info(`Verify result: ${verify_result}`);
-
               unsub();
             }
           }
@@ -240,17 +249,44 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
       content: (
         <>
           <Spin tip="Waiting for Credential..." spinning={step2Spinning}>
-            <Alert
-              message="认证失败"
-              description="看到此消息则证明当前账户无此设备所有权"
-              type="info"
-            />
+            <Alert message="等待凭证" description="等待凭证下发" type="info" />
           </Spin>
         </>
       ),
     },
     {
-      content: <></>,
+      content: (
+        <>
+          <Result
+            status="success"
+            title="认证成功"
+            subTitle={
+              <>
+                <Typography>
+                  <Typography.Paragraph>
+                    <Typography.Text strong={true}>凭证数据：</Typography.Text>
+                    <Typography.Text copyable={true}>
+                      {credential}
+                    </Typography.Text>
+                  </Typography.Paragraph>
+                  <Typography.Paragraph>
+                    <Typography.Text strong={true}>签名数据：</Typography.Text>
+                    <Typography.Text copyable={true}>
+                      {sign}
+                    </Typography.Text>
+                  </Typography.Paragraph>
+                </Typography>
+              </>
+            }
+            extra={[
+              <Button type="primary" key="console">
+                Go Console
+              </Button>,
+              <Button key="buy">Buy Again</Button>,
+            ]}
+          />
+        </>
+      ),
     },
   ];
 
@@ -293,6 +329,8 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
           setStepsStatus('process');
           setStep2Spinning(true);
           setUnlockPassword('');
+          setCredential('');
+          setSign('');
         }}
       >
         <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
