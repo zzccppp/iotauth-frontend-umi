@@ -1,19 +1,31 @@
 import { UserOutlined } from '@ant-design/icons';
+import { ApiPromise } from '@polkadot/api';
 import Identicon from '@polkadot/react-identicon';
 import keyring, { Keyring } from '@polkadot/ui-keyring';
 import { KeyringAddress } from '@polkadot/ui-keyring/types';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { Avatar, Space } from 'antd';
+import { Device } from './pages/Devices/components/DeviceList';
+
+interface InitialStateProps {
+  account?: KeyringAddress;
+  api?: ApiPromise;
+  remoteEndpoint?: string;
+  savedDevices?: Device[];
+}
 
 // 运行时配置
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 // 更多信息见文档：https://umijs.org/docs/api/runtime-config#getinitialstate
-export async function getInitialState(): Promise<{
-  account?: KeyringAddress;
-}> {
+export async function getInitialState(): Promise<InitialStateProps> {
   await cryptoWaitReady();
   keyring.loadAll({ ss58Format: 42, type: 'sr25519', isDevelopment: true });
-  return { account: undefined };
+  return {
+    account: undefined,
+    api: undefined,
+    remoteEndpoint: '',
+    savedDevices: [],
+  };
 }
 
 export const layout = () => {
