@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { useModel } from '@umijs/max';
 import { Avatar, Card, Col, Divider, Row, message } from 'antd';
 import {
@@ -25,6 +25,7 @@ const DeviceList: React.FC<PropsWithChildren> = (props) => {
   const [messageApi, contextHolder] = message.useMessage();
 
   async function getDevices() {
+    console.log('get-devices');
     const api = initialState?.api;
     const account = initialState?.account;
     if (api && account) {
@@ -54,7 +55,9 @@ const DeviceList: React.FC<PropsWithChildren> = (props) => {
     );
   });
 
-  getDevices();
+  useEffect(() => {
+    getDevices();
+  }, [initialState]);
 
   return (
     <>
