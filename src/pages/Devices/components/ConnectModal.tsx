@@ -124,11 +124,13 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
           ) {
             const cred = event.data['credential'];
             const signature = event.data['signature'];
+            const paraRemote = event.data['paraRemote'];
             const cred_json: Credential = JSON.parse(cred.toHuman());
             if (
               Number.parseInt(cred_json.random) == randomNum &&
               cred_json.unique_id == device.uniqueId &&
-              cred_json.account == account.address
+              cred_json.account == account.address &&
+              paraRemote == device.paraId
             ) {
               console.log(cred_json);
               setCredential(cred.toHuman());
@@ -151,26 +153,100 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
     }
   }
 
+  async function doParaAuth() {
+    if (api && account) {
+      const randomNum = randomAsNumber();
+      await api.tx.iotAuth
+        .requestForParachainAuth(device.uniqueId, device.paraId, randomNum)
+        .signAndSend(pair, { nonce: -1 });
+
+      const unsub = await api.query.system.events((events) => {
+        events.forEach((record) => {
+          const { event, phase } = record;
+          console.log(event);
+          if (
+            event.section == 'iotAuth' &&
+            event.method == 'ParaAuthRequestSend'
+          ) {
+            const random = event.data['random'];
+            if (random.eq(randomNum)) {
+              const acc = event.data['account'];
+              const uid = event.data['uniqueId'];
+              const para_remote = event.data['paraRemote'];
+              console.log(para_remote);
+              if (acc.eq(account.address) && uid.eq(device.uniqueId)) {
+                messageApi.success(
+                  `Received ParaAuthRequestSend for ${uid.toHex()}, waiting for LocalAuthCredentialIssued`,
+                );
+                setCurrent(2);
+              }
+            }
+          } else if (
+            event.section == 'iotAuth' &&
+            event.method == 'ParaAuthFailed'
+          ) {
+            const random = event.data['random'];
+            if (random.eq(randomNum)) {
+              const acc = event.data['account'];
+              if (acc.eq(account.address)) {
+                messageApi.error('认证失败');
+                setStep2Spinning(false);
+                setStepsStatus('error');
+                unsub();
+              }
+            }
+          } else if (
+            event.section == 'iotAuth' &&
+            event.method == 'ParaAuthCredentialIssued'
+          ) {
+            const cred = event.data['credential'];
+            const signature = event.data['signature'];
+            const cred_json: Credential = JSON.parse(cred.toHuman());
+            if (
+              Number.parseInt(cred_json.random) == randomNum &&
+              cred_json.unique_id == device.uniqueId &&
+              cred_json.account == account.address
+            ) {
+              console.log(cred_json);
+              setCredential(cred.toHuman());
+              setSign(signature.toHex());
+              setCurrent(3);
+              //   // 验证签名
+              //   const verify_result = bob.verify(
+              //     credential,
+              //     signature,
+              //     ca_pubkey,
+              //   );
+              //   log.info(`Verify result: ${verify_result}`);
+              unsub();
+            }
+          }
+        });
+      });
+      setCurrent(1);
+    }
+  }
+
   const contents = [
     {
       content: (
         <>
           <Row gutter={16}>
             <Col>
-              <Descriptions title="设备信息" bordered>
-                <Descriptions.Item label="设备名称">
+              <Descriptions title='设备信息' bordered>
+                <Descriptions.Item label='设备名称'>
                   {device.description}
                 </Descriptions.Item>
-                <Descriptions.Item label="设备UniqueID">
+                <Descriptions.Item label='设备UniqueID'>
                   {device.uniqueId}
                 </Descriptions.Item>
-                <Descriptions.Item label="设备硬件ID">
+                <Descriptions.Item label='设备硬件ID'>
                   {device.hardwareId}
                 </Descriptions.Item>
-                <Descriptions.Item label="设备所属区块链">
+                <Descriptions.Item label='设备所属区块链'>
                   {device.paraId}
                 </Descriptions.Item>
-                <Descriptions.Item label="当前连接的区块链">
+                <Descriptions.Item label='当前连接的区块链'>
                   {paraIDNow}
                 </Descriptions.Item>
               </Descriptions>
@@ -222,6 +298,9 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
                   if (device.paraId == paraIDNow) {
                     // localAuth
                     doLocalAuth();
+                  } else {
+                    // paraAuth
+                    doParaAuth();
                   }
                 }}
               >
@@ -235,11 +314,11 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
     {
       content: (
         <>
-          <Spin tip="Loading..." spinning={step2Spinning}>
+          <Spin tip='Loading...' spinning={step2Spinning}>
             <Alert
-              message="认证失败"
-              description="看到此消息则证明当前账户无此设备所有权"
-              type="error"
+              message='认证失败'
+              description='看到此消息则证明当前账户无此设备所有权'
+              type='error'
             />
           </Spin>
         </>
@@ -248,8 +327,8 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
     {
       content: (
         <>
-          <Spin tip="Waiting for Credential..." spinning={step2Spinning}>
-            <Alert message="等待凭证" description="等待凭证下发" type="info" />
+          <Spin tip='Waiting for Credential...' spinning={step2Spinning}>
+            <Alert message='等待凭证' description='等待凭证下发' type='info' />
           </Spin>
         </>
       ),
@@ -258,8 +337,8 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
       content: (
         <>
           <Result
-            status="success"
-            title="认证成功"
+            status='success'
+            title='认证成功'
             subTitle={
               <>
                 <Typography>
@@ -279,10 +358,10 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
               </>
             }
             extra={[
-              <Button type="primary" key="console">
+              <Button type='primary' key='console'>
                 Go Console
               </Button>,
-              <Button key="buy">Buy Again</Button>,
+              <Button key='buy'>Buy Again</Button>,
             ]}
           />
         </>
@@ -333,7 +412,7 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
           setSign('');
         }}
       >
-        <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
+        <Space direction='vertical' size='middle' style={{ display: 'flex' }}>
           <Steps items={items} current={current} status={stepsStatus}></Steps>
           {contents[current].content}
         </Space>

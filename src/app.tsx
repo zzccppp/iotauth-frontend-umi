@@ -30,7 +30,7 @@ export async function getInitialState(): Promise<InitialStateProps> {
 
 export const layout = () => {
   return {
-    logo: 'https://polkadot.js.org/logo.svg',
+    logo: '/logo.svg',
     menu: {
       locale: false,
     },

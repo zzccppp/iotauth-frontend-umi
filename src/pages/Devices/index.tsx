@@ -13,8 +13,6 @@ const DevicesPage: React.FC = () => {
   const { initialState, loading, error, refresh, setInitialState } =
     useModel('@@initialState');
 
-  const [nodeAddr, setNodeAddr] = useState('');
-  const [inputAddr, setInputAddr] = useState('');
   const [showChangeAddrModal, setShowChangeAddrModal] = useState(false);
   // const [api, setApi] = useState<undefined | ApiPromise>(undefined);
 
@@ -54,7 +52,6 @@ const DevicesPage: React.FC = () => {
                 api: api,
                 remoteEndpoint: addr,
               });
-              setNodeAddr(addr);
               setShowChangeAddrModal(false);
             }}
           ></ChangeAddrModal>
