@@ -124,15 +124,12 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
           ) {
             const cred = event.data['credential'];
             const signature = event.data['signature'];
-            const paraRemote = event.data['paraRemote'];
             const cred_json: Credential = JSON.parse(cred.toHuman());
             if (
               Number.parseInt(cred_json.random) == randomNum &&
               cred_json.unique_id == device.uniqueId &&
-              cred_json.account == account.address &&
-              paraRemote == device.paraId
+              cred_json.account == account.address
             ) {
-              console.log(cred_json);
               setCredential(cred.toHuman());
               setSign(signature.toHex());
               setCurrent(3);
@@ -163,7 +160,6 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
       const unsub = await api.query.system.events((events) => {
         events.forEach((record) => {
           const { event, phase } = record;
-          console.log(event);
           if (
             event.section == 'iotAuth' &&
             event.method == 'ParaAuthRequestSend'
@@ -176,7 +172,7 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
               console.log(para_remote);
               if (acc.eq(account.address) && uid.eq(device.uniqueId)) {
                 messageApi.success(
-                  `Received ParaAuthRequestSend for ${uid.toHex()}, waiting for LocalAuthCredentialIssued`,
+                  `Received ParaAuthRequestSend for ${uid.toHex()}, waiting for ParaAuthCredentialIssued`,
                 );
                 setCurrent(2);
               }
@@ -202,12 +198,12 @@ const ConnectModal: React.FC<PropsWithChildren<ConnectModalProps>> = (
             const cred = event.data['credential'];
             const signature = event.data['signature'];
             const cred_json: Credential = JSON.parse(cred.toHuman());
+            console.log(event.data);
             if (
               Number.parseInt(cred_json.random) == randomNum &&
               cred_json.unique_id == device.uniqueId &&
               cred_json.account == account.address
             ) {
-              console.log(cred_json);
               setCredential(cred.toHuman());
               setSign(signature.toHex());
               setCurrent(3);
